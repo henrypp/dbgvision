@@ -1,0 +1,117 @@
+#ifndef __RESOURCE_H__
+#define __RESOURCE_H__
+
+#ifndef IDC_STATIC
+#define IDC_STATIC (-1)
+#endif
+
+// Acceleration
+#define IDA_MAIN 1
+
+// Menu Id
+#define IDM_MAIN 100
+#define IDM_TRAY 101
+#define IDM_LISTVIEW 102
+#define IDM_CONFIG 103
+
+// Dialogs
+#define IDD_MAIN 100
+#define IDD_SETTINGS_GENERAL 101
+#define IDD_SETTINGS_EXCLUDE 102
+
+// Main Dlg
+#define IDC_LISTVIEW 104
+#define IDC_STATUSBAR 105
+
+// Settings Dlg
+#define IDC_NAV 106
+#define IDC_RESET 107
+#define IDC_CLOSE 108
+
+#define IDC_EXCLUDE 109
+
+// Main Menu
+#define IDM_SETTINGS 110
+#define IDM_EXIT 111
+#define IDM_CLEAR 112
+#define IDM_ALWAYSONTOP_CHK 113
+#define IDM_STARTMINIMIZED_CHK 114
+#define IDM_USEDARKTHEME_CHK 115
+#define IDM_SHOWTRAYPOPUP_CHK 116
+#define IDM_ENABLEHIGHLIGHTING_CHK 117
+#define IDM_CHECKUPDATES_CHK 118
+
+#define IDM_WEBSITE 119
+#define IDM_CHECKUPDATES 120
+#define IDM_ABOUT 121
+
+#define IDM_TRAY_SHOW 122
+#define IDM_TRAY_SETTINGS 123
+#define IDM_TRAY_WEBSITE 124
+#define IDM_TRAY_ABOUT 125
+#define IDM_TRAY_EXIT 126
+
+#define IDM_ADD 127
+#define IDM_DELETE 128
+#define IDM_EXPLORE 129
+#define IDM_EXCLUDE 130
+#define IDM_COPY 131
+#define IDM_COPY_VALUE 132
+#define IDM_SELECT_ALL 133
+
+#define IDX_LANGUAGE 1000
+
+// Strings
+#define IDS_FILE 1
+#define IDS_EXIT 2
+#define IDS_VIEW 3
+#define IDS_CLEAR 4
+#define IDS_SETTINGS 5
+#define IDS_ALWAYSONTOP_CHK 6
+#define IDS_STARTMINIMIZED_CHK 7
+#define IDS_USEDARKTHEME_CHK 8
+#define IDS_SHOWTRAYPOPUP_CHK 9
+#define IDS_ENABLEHIGHLIGHTING_CHK 10
+#define IDS_CHECKUPDATES_CHK 11
+#define IDS_LANGUAGE 12
+#define IDS_HELP 13
+#define IDS_WEBSITE 14
+#define IDS_CHECKUPDATES 15
+#define IDS_ABOUT 16
+#define IDS_DONATE 17
+
+#define IDS_RESET 18
+#define IDS_SAVE 19
+#define IDS_CLOSE 20
+
+#define IDS_TRAY_SHOW 21
+
+#define IDS_ADD 22
+#define IDS_DELETE 23
+#define IDS_EXPLORE 24
+#define IDS_EXCLUDE 25
+#define IDS_COPY 26
+#define IDS_COPY_VALUE 27
+
+#define IDS_INDEX 28
+#define IDS_TIME 29
+#define IDS_PID 30
+#define IDS_PROCESS 31
+#define IDS_MESSAGE 32
+
+#define IDS_SETTINGS_EXCLUDE 33
+
+#define IDS_STATUS 34
+
+#define IDS_ERROR_DUPLICATE 35
+
+#define IDS_STATUS_NEWMESSAGE 36
+
+#define IDS_QUESTION_DELETE 37
+#define IDS_QUESTION_CLEAN 38
+
+// Icons
+#define IDI_MAIN 100
+#define IDI_INACTIVE 101
+
+#endif // __RESOURCE_H__

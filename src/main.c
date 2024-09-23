@@ -108,7 +108,7 @@ BOOLEAN _app_popupallowed ()
 VOID _app_additem (
 	_In_ HWND hwnd,
 	_In_ ULONG pid,
-	_In_ PR_STRING path,
+	_In_ PR_STRINGREF path,
 	_In_ PR_STRINGREF message,
 	_In_ ULONG_PTR hash_code
 )
@@ -125,7 +125,7 @@ VOID _app_additem (
 	ptr_item->hash_code = hash_code;
 	ptr_item->clr = (COLORREF)hash_code;
 
-	ptr_item->path = path;
+	ptr_item->path = _r_obj_createstring2 (path);
 	ptr_item->message = _r_obj_createstring2 (message);
 
 	ptr_item->index = count + 1;
@@ -134,6 +134,18 @@ VOID _app_additem (
 	_r_path_geticon (path->buffer, &ptr_item->icon_id, NULL);
 
 	_r_listview_additem_ex (hwnd, IDC_LISTVIEW, count, LPSTR_TEXTCALLBACK, I_IMAGECALLBACK, I_GROUPIDNONE, (LPARAM)ptr_item);
+
+	if (_r_config_getboolean (L"IsShowTrayPopup", TRUE))
+	{
+		if (!_r_wnd_isvisible (hwnd, TRUE) && _app_popupallowed ())
+		{
+			_r_tray_popup (hwnd, &GUID_TrayIcon, NIIF_INFO, _r_app_getname (), _r_locale_getstring (IDS_STATUS_NEWMESSAGE));
+
+			_r_config_setlong64 (L"PopupTimestamp", _r_unixtime_now ());
+
+			config.timestamp = _r_config_getlong64 (L"PopupTimestamp", 0);
+		}
+	}
 }
 
 NTSTATUS NTAPI _app_readerthread (
@@ -175,19 +187,23 @@ NTSTATUS NTAPI _app_readerthread (
 			debugger = config.base_address;
 
 			if (!debugger->ProcessId)
-				continue;
-
-			status = _r_sys_getprocessimagepathbyid (ULongToHandle (debugger->ProcessId), TRUE, &path);
-
-			if (NT_SUCCESS (status))
 			{
-				hash_code = _r_str_gethash (_r_path_getbasename (&path->sr), TRUE);
-
-				if (_r_obj_findhashtable (exclude_table, hash_code))
-					continue;
+				path = _r_sys_getkernelfilename (TRUE);
 			}
 			else
 			{
+				_r_sys_getprocessimagepathbyid (ULongToHandle (debugger->ProcessId), TRUE, &path);
+			}
+
+			if (!path)
+				continue;
+
+			hash_code = _r_str_gethash (_r_path_getbasename (&path->sr), TRUE);
+
+			if (_r_obj_findhashtable (exclude_table, hash_code))
+			{
+				_r_obj_dereference (path);
+
 				continue;
 			}
 
@@ -203,26 +219,19 @@ NTSTATUS NTAPI _app_readerthread (
 				{
 					_r_str_splitatchar (&remaining_part, L'\n', &first_part, &remaining_part);
 
-					if (first_part.length != 0)
-						_app_additem (hwnd, debugger->ProcessId, path, &first_part, hash_code);
+					if (first_part.length > sizeof (WCHAR))
+					{
+						_r_str_trimstring2 (&first_part, L"\r\n", 0);
+
+						_app_additem (hwnd, debugger->ProcessId, &path->sr, &first_part, hash_code);
+					}
 				}
 
 				_app_resizecolumns (hwnd);
 				_app_refreshstatus (hwnd, FALSE);
 
-				if (_r_config_getboolean (L"IsShowTrayPopup", TRUE))
-				{
-					if (!_r_wnd_isvisible (hwnd, TRUE) && _app_popupallowed ())
-					{
-						_r_tray_popup (hwnd, &GUID_TrayIcon, NIIF_INFO, _r_app_getname (), _r_locale_getstring (IDS_STATUS_NEWMESSAGE));
-
-						_r_config_setlong64 (L"PopupTimestamp", _r_unixtime_now ());
-
-						config.timestamp = _r_config_getlong64 (L"PopupTimestamp", 0);
-					}
-				}
-
 				_r_obj_dereference (message);
+				_r_obj_dereference (path);
 			}
 		}
 	}
@@ -248,7 +257,7 @@ VOID _app_displayinfoapp_callback (
 
 			case 1:
 			{
-				_r_str_copy (lpnmlv->item.pszText, lpnmlv->item.cchTextMax, ptr_item->timestamp->buffer);
+				_r_str_copy (lpnmlv->item.pszText, lpnmlv->item.cchTextMax, _r_obj_getstringordefault (ptr_item->timestamp, L"<n/a>"));
 				break;
 			}
 
@@ -267,7 +276,7 @@ VOID _app_displayinfoapp_callback (
 			case 4:
 			{
 
-				_r_str_copy (lpnmlv->item.pszText, lpnmlv->item.cchTextMax, ptr_item->message->buffer);
+				_r_str_copy (lpnmlv->item.pszText, lpnmlv->item.cchTextMax, _r_obj_getstringordefault (ptr_item->message, L"<n/a>"));
 				break;
 			}
 		}
@@ -650,7 +659,7 @@ INT_PTR CALLBACK SettingsProc (
 	return FALSE;
 }
 
-NTSTATUS _app_createevent (
+NTSTATUS _app_createevents (
 	_In_ HWND hwnd
 )
 {
@@ -664,7 +673,7 @@ NTSTATUS _app_createevent (
 
 	_r_obj_initializeunicodestring (&us, buffer);
 
-	InitializeObjectAttributes (&oa, &us, OBJ_INHERIT | OBJ_CASE_INSENSITIVE | OBJ_OPENIF, NULL, NULL);
+	InitializeObjectAttributes (&oa, &us, OBJ_INHERIT | OBJ_CASE_INSENSITIVE | OBJ_OPENIF, NULL, config.sd);
 
 	status = NtCreateEvent (&config.hdebug_local_evt, EVENT_ALL_ACCESS, &oa, SynchronizationEvent, TRUE);
 
@@ -689,7 +698,7 @@ NTSTATUS _app_createevent (
 
 	_r_obj_initializeunicodestring (&us, buffer);
 
-	InitializeObjectAttributes (&oa, &us, OBJ_INHERIT | OBJ_CASE_INSENSITIVE | OBJ_OPENIF, NULL, NULL);
+	InitializeObjectAttributes (&oa, &us, OBJ_INHERIT | OBJ_CASE_INSENSITIVE | OBJ_OPENIF, NULL, config.sd);
 
 	status = NtCreateEvent (&config.hready_local_evt, EVENT_ALL_ACCESS, &oa, SynchronizationEvent, TRUE);
 
@@ -705,7 +714,7 @@ NTSTATUS _app_createevent (
 
 	_r_obj_initializeunicodestring (&us, buffer);
 
-	InitializeObjectAttributes (&oa, &us, OBJ_INHERIT | OBJ_CASE_INSENSITIVE | OBJ_OPENIF, NULL, NULL);
+	InitializeObjectAttributes (&oa, &us, OBJ_INHERIT | OBJ_CASE_INSENSITIVE | OBJ_OPENIF, NULL, config.sd);
 
 	status = NtCreateEvent (&config.hdebug_global_evt, EVENT_ALL_ACCESS, &oa, SynchronizationEvent, TRUE);
 
@@ -721,7 +730,7 @@ NTSTATUS _app_createevent (
 
 	_r_obj_initializeunicodestring (&us, buffer);
 
-	InitializeObjectAttributes (&oa, &us, OBJ_INHERIT | OBJ_CASE_INSENSITIVE | OBJ_OPENIF, NULL, NULL);
+	InitializeObjectAttributes (&oa, &us, OBJ_INHERIT | OBJ_CASE_INSENSITIVE | OBJ_OPENIF, NULL, config.sd);
 
 	status = NtCreateEvent (&config.hready_global_evt, EVENT_ALL_ACCESS, &oa, SynchronizationEvent, TRUE);
 
@@ -735,25 +744,32 @@ VOID _app_initialize (
 	_In_ HWND hwnd
 )
 {
-	ULONG privileges[] = {
+	LONG privileges[] = {
 		SE_DEBUG_PRIVILEGE,
 		SE_CREATE_GLOBAL_PRIVILEGE,
 	};
 
 	OBJECT_ATTRIBUTES oa = {0};
+	LARGE_INTEGER max_size = {0};
 	LARGE_INTEGER offset = {0};
-	LARGE_INTEGER li = {0};
+	R_ENVIRONMENT environment;
 	UNICODE_STRING us;
 	WCHAR buffer[128];
 	ULONG_PTR base_size = sizeof (DEBUG_BUFFER);
 	NTSTATUS status;
 
-	status = _r_sys_setprocessprivilege (NtCurrentProcess (), privileges, RTL_NUMBER_OF (privileges), TRUE);
+	_r_sys_setprocessprivilege (NtCurrentProcess (), privileges, RTL_NUMBER_OF (privileges), TRUE);
 
-	if (!NT_SUCCESS (status))
-		_r_show_errormessage (hwnd, NULL, status, L"_r_sys_setprocessprivilege", ET_NATIVE);
+	if (!ConvertStringSecurityDescriptorToSecurityDescriptorW (SECURITY_DESCRIPTOR, SDDL_REVISION, &config.sd, NULL))
+	{
+		_r_show_errormessage (hwnd, NULL, NtLastError (), L"ConvertStringSecurityDescriptorToSecurityDescriptorW", ET_WINDOWS);
 
-	status = _app_createevent (hwnd);
+		RtlExitUserProcess (STATUS_SUCCESS);
+
+		return;
+	}
+
+	status = _app_createevents (hwnd);
 
 	if (status != STATUS_SUCCESS)
 		return;
@@ -762,20 +778,14 @@ VOID _app_initialize (
 
 	_r_obj_initializeunicodestring (&us, buffer);
 
-	InitializeObjectAttributes (&oa, &us, OBJ_CASE_INSENSITIVE | OBJ_OPENIF, NULL, NULL);
+	InitializeObjectAttributes (&oa, &us, OBJ_CASE_INSENSITIVE | OBJ_OPENIF, NULL, config.sd);
 
-	li.QuadPart = PAGE_SIZE;
+	max_size.QuadPart = PAGE_SIZE;
 
-	status = NtCreateSection (&config.hsection, STANDARD_RIGHTS_REQUIRED | SECTION_QUERY | SECTION_MAP_READ | SECTION_MAP_WRITE, &oa, &li, PAGE_READWRITE, SEC_COMMIT, NULL);
+	status = NtCreateSection (&config.hsection, STANDARD_RIGHTS_REQUIRED | SECTION_QUERY | SECTION_MAP_READ | SECTION_MAP_WRITE, &oa, &max_size, PAGE_READWRITE, SEC_COMMIT, NULL);
 
 	if (NT_SUCCESS (status))
 	{
-		SetSecurityInfo (config.hsection, SE_KERNEL_OBJECT, DACL_SECURITY_INFORMATION, NULL, NULL, NULL, NULL);
-		SetSecurityInfo (config.hdebug_global_evt, SE_KERNEL_OBJECT, DACL_SECURITY_INFORMATION, NULL, NULL, NULL, NULL);
-		SetSecurityInfo (config.hready_global_evt, SE_KERNEL_OBJECT, DACL_SECURITY_INFORMATION, NULL, NULL, NULL, NULL);
-		SetSecurityInfo (config.hdebug_local_evt, SE_KERNEL_OBJECT, DACL_SECURITY_INFORMATION, NULL, NULL, NULL, NULL);
-		SetSecurityInfo (config.hready_local_evt, SE_KERNEL_OBJECT, DACL_SECURITY_INFORMATION, NULL, NULL, NULL, NULL);
-
 		status = NtMapViewOfSection (config.hsection, NtCurrentProcess (), &config.base_address, 0, 0, &offset, &base_size, ViewShare, 0, PAGE_READONLY);
 
 		if (NT_SUCCESS (status))
@@ -783,7 +793,9 @@ VOID _app_initialize (
 			NtSetEvent (config.hdebug_global_evt, NULL);
 			NtSetEvent (config.hdebug_local_evt, NULL);
 
-			_r_sys_createthread (NULL, NtCurrentProcess (), &_app_readerthread, hwnd, NULL, L"Monitor");
+			_r_sys_setenvironment (&environment, THREAD_PRIORITY_HIGHEST, IoPriorityNormal, MEMORY_PRIORITY_NORMAL);
+
+			_r_sys_createthread (NULL, NtCurrentProcess (), &_app_readerthread, hwnd, &environment, L"Monitor");
 		}
 		else
 		{
@@ -1092,16 +1104,27 @@ INT_PTR CALLBACK DlgProc (
 				case NM_DBLCLK:
 				{
 					LPNMITEMACTIVATE lpnmlv;
-
-					if (nmlp->idFrom != IDC_LISTVIEW)
-						break;
+					INT command_id = 0;
+					INT listview_id;
 
 					lpnmlv = (LPNMITEMACTIVATE)lparam;
 
 					if (lpnmlv->iItem == -1)
 						break;
 
-					_r_wnd_sendmessage (hwnd, 0, WM_COMMAND, MAKEWPARAM (IDM_EXPLORE, 0), 0);
+					listview_id = (INT)(INT_PTR)lpnmlv->hdr.idFrom;
+
+					if (listview_id == IDC_LISTVIEW)
+					{
+						command_id = IDM_EXPLORE;
+					}
+					else if (listview_id == IDC_STATUSBAR)
+					{
+						command_id = IDM_CLEAR;
+					}
+
+					if (command_id)
+						_r_wnd_sendmessage (hwnd, 0, WM_COMMAND, MAKEWPARAM (command_id, 0), 0);
 
 					break;
 				}
@@ -1151,6 +1174,19 @@ INT_PTR CALLBACK DlgProc (
 					_app_displayinfoapp_callback ((PITEM_DATA)lpnmlv->item.lParam, lpnmlv);
 
 					break;
+				}
+
+				case LVN_GETEMPTYMARKUP:
+				{
+					NMLVEMPTYMARKUP* lpnmlv = (NMLVEMPTYMARKUP*)lparam;
+
+					lpnmlv->dwFlags = EMF_CENTERED;
+
+					_r_str_copy (lpnmlv->szMarkup, RTL_NUMBER_OF (lpnmlv->szMarkup), _r_locale_getstring (IDS_STATUS_EMPTY));
+
+					SetWindowLongPtrW (hwnd, DWLP_MSGRESULT, TRUE);
+
+					return TRUE;
 				}
 			}
 
@@ -1258,6 +1294,9 @@ INT_PTR CALLBACK DlgProc (
 
 				case IDM_CLEAR:
 				{
+					if (!_r_listview_getitemcount (hwnd, IDC_LISTVIEW))
+						break;
+
 					if (!_r_show_confirmmessage (hwnd, NULL, _r_locale_getstring (IDS_QUESTION_CLEAN), L"IsWantConfirm"))
 						break;
 
@@ -1380,7 +1419,8 @@ INT_PTR CALLBACK DlgProc (
 
 						if (ptr_item)
 						{
-							_r_shell_showfile (ptr_item->path->buffer);
+							if (ptr_item->path)
+								_r_shell_showfile (ptr_item->path->buffer);
 						}
 					}
 
@@ -1430,7 +1470,9 @@ INT_PTR CALLBACK DlgProc (
 						_app_findanddeleteitem (hwnd, hash_code);
 					}
 
-					_r_config_setstring (L"Exclude", _r_obj_finalstringbuilder (&sb)->buffer);
+					string = _r_obj_finalstringbuilder (&sb);
+
+					_r_config_setstring (L"Exclude", _r_obj_getstring (string));
 
 					_r_obj_deletestringbuilder (&sb);
 

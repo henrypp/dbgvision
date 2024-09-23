@@ -12,6 +12,8 @@ DEFINE_GUID (GUID_TrayIcon, 0xC472A261, 0x77AC, 0x4D01, 0xB8, 0xC7, 0x3D, 0xB1, 
 
 #define LANG_MENU 7
 
+#define SECURITY_DESCRIPTOR L"D:(A;;GRGWGX;;;WD)(A;;GA;;;SY)(A;;GA;;;BA)(A;;GRGWGX;;;AN)(A;;GRGWGX;;;RC)(A;;GRGWGX;;;S-1-15-2-1)S:(ML;;NW;;;LW)"
+
 typedef struct _STATIC_DATA
 {
 	HANDLE hdebug_global_evt;
@@ -19,7 +21,10 @@ typedef struct _STATIC_DATA
 	HANDLE hdebug_local_evt;
 	HANDLE hready_local_evt;
 	HANDLE hsection;
+
 	PVOID base_address;
+	PVOID sd;
+
 	LONG64 timestamp;
 } STATIC_DATA, *PSTATIC_DATA;
 

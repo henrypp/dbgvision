@@ -118,6 +118,8 @@
 #define IDS_UPDATE_INIT 44
 #define IDS_UPDATE_INSTALL 45
 
+#define IDS_STATUS_EMPTY 46
+
 // Icons
 #define IDI_MAIN 100
 #define IDI_INACTIVE 101

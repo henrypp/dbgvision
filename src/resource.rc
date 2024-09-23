@@ -180,6 +180,8 @@ STRINGTABLE
 	IDS_UPDATE_ERROR "Update server connection error."
 	IDS_UPDATE_INIT "Checking for new releases..."
 	IDS_UPDATE_INSTALL "Update available, do you want to install them?"
+
+	IDS_STATUS_EMPTY "Empty."
 }
 
 //

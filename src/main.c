@@ -858,7 +858,7 @@ INT_PTR CALLBACK DlgProc (
 			if (SUCCEEDED (status))
 				_r_listview_setimagelist (hwnd, IDC_LISTVIEW, himg);
 
-			exclude_table = _r_obj_createhashtable (sizeof (BOOLEAN), NULL);
+			exclude_table = _r_obj_createhashtable (sizeof (BOOLEAN), 8, NULL);
 
 			config.timestamp = _r_config_getlong64 (L"PopupTimestamp", 0);
 
@@ -1420,7 +1420,7 @@ INT_PTR CALLBACK DlgProc (
 						if (ptr_item)
 						{
 							if (ptr_item->path)
-								_r_shell_showfile (ptr_item->path->buffer);
+								_r_shell_showfile (&ptr_item->path->sr);
 						}
 					}
 

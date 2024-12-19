@@ -133,7 +133,7 @@ VOID _app_additem (
 
 	_r_path_geticon (path, &ptr_item->icon_id, NULL);
 
-	_r_listview_additem_ex (hwnd, IDC_LISTVIEW, count, LPSTR_TEXTCALLBACK, I_IMAGECALLBACK, I_GROUPIDNONE, (LPARAM)ptr_item);
+	_r_listview_additem (hwnd, IDC_LISTVIEW, count, LPSTR_TEXTCALLBACK, I_DEFAULT, I_DEFAULT, (LPARAM)ptr_item);
 
 	if (_r_config_getboolean (L"IsShowTrayPopup", TRUE))
 	{
@@ -426,7 +426,7 @@ INT_PTR CALLBACK SettingsProc (
 
 							item_count = _r_listview_getitemcount (hwnd, IDC_EXCLUDE);
 
-							_r_listview_additem (hwnd, IDC_EXCLUDE, item_count, string2->buffer);
+							_r_listview_additem (hwnd, IDC_EXCLUDE, item_count, string2->buffer, I_DEFAULT, I_DEFAULT, I_DEFAULT);
 
 							_r_obj_dereference (string2);
 						}
@@ -618,7 +618,7 @@ INT_PTR CALLBACK SettingsProc (
 							{
 								item_count = _r_listview_getitemcount (hwnd, IDC_EXCLUDE);
 
-								_r_listview_additem_ex (hwnd, IDC_EXCLUDE, item_count, _r_path_getbasename (&path->sr), I_IMAGENONE, I_GROUPIDNONE, (LPARAM)path);
+								_r_listview_additem (hwnd, IDC_EXCLUDE, item_count, _r_path_getbasename (&path->sr), I_DEFAULT, I_DEFAULT, (LPARAM)path);
 							}
 						}
 

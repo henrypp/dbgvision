@@ -635,7 +635,7 @@ INT_PTR CALLBACK SettingsProc (
 					if (!_r_listview_getselectedcount (hwnd, IDC_EXCLUDE))
 						break;
 
-					if (!_r_show_confirmmessage (hwnd, NULL, _r_locale_getstring (IDS_QUESTION_DELETE), NULL))
+					if (!_r_show_confirmmessage (hwnd, _r_locale_getstring (IDS_QUESTION_DELETE), NULL, NULL, FALSE))
 						break;
 
 					item_count = _r_listview_getitemcount (hwnd, IDC_EXCLUDE);
@@ -1297,7 +1297,7 @@ INT_PTR CALLBACK DlgProc (
 					if (!_r_listview_getitemcount (hwnd, IDC_LISTVIEW))
 						break;
 
-					if (!_r_show_confirmmessage (hwnd, NULL, _r_locale_getstring (IDS_QUESTION_CLEAN), L"IsWantConfirm"))
+					if (!_r_show_confirmmessage (hwnd, _r_locale_getstring (IDS_QUESTION_CLEAN), NULL, L"IsWantConfirm", FALSE))
 						break;
 
 					_r_listview_deleteallitems (hwnd, IDC_LISTVIEW);

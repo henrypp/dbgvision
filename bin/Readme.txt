@@ -10,4 +10,4 @@ To activate portable mode, create "dbgvision.ini" in application folder, or move
 Website: https://github.com/henrypp
 Support: sforce5@mail.ru
 
-(c) 2024 Henry++
+(c) 2024-2025 Henry++

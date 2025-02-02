@@ -133,7 +133,7 @@ VOID _app_additem (
 
 	_r_path_geticon (path, &ptr_item->icon_id, NULL);
 
-	_r_listview_additem (hwnd, IDC_LISTVIEW, count, LPSTR_TEXTCALLBACK, I_DEFAULT, I_DEFAULT, (LPARAM)ptr_item);
+	_r_listview_additem (hwnd, IDC_LISTVIEW, count, LPSTR_TEXTCALLBACK, I_IMAGECALLBACK, I_DEFAULT, (LPARAM)ptr_item);
 
 	if (_r_config_getboolean (L"IsShowTrayPopup", TRUE))
 	{

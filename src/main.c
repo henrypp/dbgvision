@@ -135,15 +135,15 @@ VOID _app_additem (
 
 	_r_listview_additem (hwnd, IDC_LISTVIEW, count, LPSTR_TEXTCALLBACK, I_IMAGECALLBACK, I_DEFAULT, (LPARAM)ptr_item);
 
-	if (_r_config_getboolean (L"IsShowTrayPopup", TRUE))
+	if (_r_config_getboolean (L"IsShowTrayPopup", TRUE, NULL))
 	{
 		if (!_r_wnd_isvisible (hwnd, TRUE) && _app_popupallowed ())
 		{
 			_r_tray_popup (hwnd, &GUID_TrayIcon, NIIF_INFO, _r_app_getname (), _r_locale_getstring (IDS_STATUS_NEWMESSAGE));
 
-			_r_config_setlong64 (L"PopupTimestamp", _r_unixtime_now ());
+			_r_config_setlong64 (L"PopupTimestamp", _r_unixtime_now (), NULL);
 
-			config.timestamp = _r_config_getlong64 (L"PopupTimestamp", 0);
+			config.timestamp = _r_config_getlong64 (L"PopupTimestamp", 0, NULL);
 		}
 	}
 }
@@ -310,7 +310,7 @@ INT CALLBACK _app_listviewcompare_callback (
 	item1 = (INT)(INT_PTR)lparam1;
 	item2 = (INT)(INT_PTR)lparam2;
 
-	if (item1 == -1 || item2 == -1)
+	if (item1 == INT_ERROR || item2 == INT_ERROR)
 		return 0;
 
 	hlistview = (HWND)lparam;
@@ -320,12 +320,12 @@ INT CALLBACK _app_listviewcompare_callback (
 
 	_r_str_printf (config_name, RTL_NUMBER_OF (config_name), L"listview\\%04" TEXT (PRIX32), listview_id);
 
-	column_id = _r_config_getlong_ex (L"SortColumn", 0, config_name);
+	column_id = _r_config_getlong (L"SortColumn", 0, config_name);
 
 	item_text_1 = _r_listview_getitemtext (hwnd, listview_id, item1, column_id);
 	item_text_2 = _r_listview_getitemtext (hwnd, listview_id, item2, column_id);
 
-	is_descend = _r_config_getboolean_ex (L"SortIsDescending", FALSE, config_name);
+	is_descend = _r_config_getboolean (L"SortIsDescending", FALSE, config_name);
 
 	if (item_text_1 && item_text_2)
 	{
@@ -360,20 +360,20 @@ VOID _app_listviewsort (
 
 	_r_str_printf (config_name, RTL_NUMBER_OF (config_name), L"listview\\%04" TEXT (PRIX32), listview_id);
 
-	is_descend = _r_config_getboolean_ex (L"SortIsDescending", FALSE, config_name);
+	is_descend = _r_config_getboolean (L"SortIsDescending", FALSE, config_name);
 
 	if (is_notifycode)
 		is_descend = !is_descend;
 
-	if (column_id == -1)
-		column_id = _r_config_getlong_ex (L"SortColumn", 0, config_name);
+	if (column_id == INT_ERROR)
+		column_id = _r_config_getlong (L"SortColumn", 0, config_name);
 
 	column_id = _r_calc_clamp (column_id, 0, column_count - 1); // set range
 
 	if (is_notifycode)
 	{
-		_r_config_setboolean_ex (L"SortIsDescending", is_descend, config_name);
-		_r_config_setlong_ex (L"SortColumn", column_id, config_name);
+		_r_config_setboolean (L"SortIsDescending", is_descend, config_name);
+		_r_config_setlong (L"SortColumn", column_id, config_name);
 	}
 
 	for (INT i = 0; i < column_count; i++)
@@ -411,7 +411,7 @@ INT_PTR CALLBACK SettingsProc (
 
 					_r_listview_addcolumn (hwnd, IDC_EXCLUDE, 0, L"", -100, LVCFMT_LEFT);
 
-					string = _r_config_getstring (L"Exclude", NULL);
+					string = _r_config_getstring (L"Exclude", NULL, NULL);
 
 					if (string)
 					{
@@ -495,7 +495,7 @@ INT_PTR CALLBACK SettingsProc (
 
 					string = _r_obj_finalstringbuilder (&sb);
 
-					_r_config_setstring (L"Exclude", _r_obj_getstring (string));
+					_r_config_setstring (L"Exclude", _r_obj_getstring (string), NULL);
 
 					_r_obj_clearhashtable (exclude_table);
 
@@ -860,9 +860,9 @@ INT_PTR CALLBACK DlgProc (
 
 			exclude_table = _r_obj_createhashtable (sizeof (BOOLEAN), 8, NULL);
 
-			config.timestamp = _r_config_getlong64 (L"PopupTimestamp", 0);
+			config.timestamp = _r_config_getlong64 (L"PopupTimestamp", 0, NULL);
 
-			string = _r_config_getstring (L"Exclude", NULL);
+			string = _r_config_getstring (L"Exclude", NULL, NULL);
 
 			if (string)
 			{
@@ -920,11 +920,11 @@ INT_PTR CALLBACK DlgProc (
 
 			if (hmenu)
 			{
-				_r_menu_checkitem (hmenu, IDM_ALWAYSONTOP_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"AlwaysOnTop", FALSE));
-				_r_menu_checkitem (hmenu, IDM_STARTMINIMIZED_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"IsStartMinimized", FALSE));
+				_r_menu_checkitem (hmenu, IDM_ALWAYSONTOP_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"AlwaysOnTop", FALSE, NULL));
+				_r_menu_checkitem (hmenu, IDM_STARTMINIMIZED_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"IsStartMinimized", FALSE, NULL));
 				_r_menu_checkitem (hmenu, IDM_USEDARKTHEME_CHK, 0, MF_BYCOMMAND, _r_theme_isenabled ());
-				_r_menu_checkitem (hmenu, IDM_SHOWTRAYPOPUP_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"IsShowTrayPopup", TRUE));
-				_r_menu_checkitem (hmenu, IDM_ENABLEHIGHLIGHTING_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"IsEnableHighlighting", TRUE));
+				_r_menu_checkitem (hmenu, IDM_SHOWTRAYPOPUP_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"IsShowTrayPopup", TRUE, NULL));
+				_r_menu_checkitem (hmenu, IDM_ENABLEHIGHLIGHTING_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"IsEnableHighlighting", TRUE, NULL));
 				_r_menu_checkitem (hmenu, IDM_CHECKUPDATES_CHK, 0, MF_BYCOMMAND, _r_update_isenabled (FALSE));
 			}
 
@@ -1021,7 +1021,7 @@ INT_PTR CALLBACK DlgProc (
 
 					lpnmlv = (LPNMITEMACTIVATE)lparam;
 
-					if (lpnmlv->hdr.idFrom != IDC_LISTVIEW || lpnmlv->iItem == -1)
+					if (lpnmlv->hdr.idFrom != IDC_LISTVIEW || lpnmlv->iItem == INT_ERROR)
 						break;
 
 					// localize
@@ -1077,7 +1077,7 @@ INT_PTR CALLBACK DlgProc (
 							if (lpnmlv->dwItemType != LVCDI_ITEM)
 								break;
 
-							if (!_r_config_getboolean (L"IsEnableHighlighting", TRUE))
+							if (!_r_config_getboolean (L"IsEnableHighlighting", TRUE, NULL))
 								break;
 
 							ptr_item = (PITEM_DATA)lpnmlv->nmcd.lItemlParam;
@@ -1109,7 +1109,7 @@ INT_PTR CALLBACK DlgProc (
 
 					lpnmlv = (LPNMITEMACTIVATE)lparam;
 
-					if (lpnmlv->iItem == -1)
+					if (lpnmlv->iItem == INT_ERROR)
 						break;
 
 					listview_id = (INT)(INT_PTR)lpnmlv->hdr.idFrom;
@@ -1311,10 +1311,10 @@ INT_PTR CALLBACK DlgProc (
 				{
 					BOOLEAN new_val;
 
-					new_val = !_r_config_getboolean (L"AlwaysOnTop", FALSE);
+					new_val = !_r_config_getboolean (L"AlwaysOnTop", FALSE, NULL);
 
 					_r_menu_checkitem (GetMenu (hwnd), ctrl_id, 0, MF_BYCOMMAND, new_val);
-					_r_config_setboolean (L"AlwaysOnTop", new_val);
+					_r_config_setboolean (L"AlwaysOnTop", new_val, NULL);
 
 					_r_wnd_top (hwnd, new_val);
 
@@ -1325,10 +1325,10 @@ INT_PTR CALLBACK DlgProc (
 				{
 					BOOLEAN new_val;
 
-					new_val = !_r_config_getboolean (L"IsStartMinimized", FALSE);
+					new_val = !_r_config_getboolean (L"IsStartMinimized", FALSE, NULL);
 
 					_r_menu_checkitem (GetMenu (hwnd), ctrl_id, 0, MF_BYCOMMAND, new_val);
-					_r_config_setboolean (L"IsStartMinimized", new_val);
+					_r_config_setboolean (L"IsStartMinimized", new_val, NULL);
 
 					break;
 				}
@@ -1347,10 +1347,10 @@ INT_PTR CALLBACK DlgProc (
 				{
 					BOOLEAN new_val;
 
-					new_val = !_r_config_getboolean (L"IsShowTrayPopup", TRUE);
+					new_val = !_r_config_getboolean (L"IsShowTrayPopup", TRUE, NULL);
 
 					_r_menu_checkitem (GetMenu (hwnd), ctrl_id, 0, MF_BYCOMMAND, new_val);
-					_r_config_setboolean (L"IsShowTrayPopup", new_val);
+					_r_config_setboolean (L"IsShowTrayPopup", new_val, NULL);
 
 					break;
 				}
@@ -1359,10 +1359,10 @@ INT_PTR CALLBACK DlgProc (
 				{
 					BOOLEAN new_val;
 
-					new_val = !_r_config_getboolean (L"IsEnableHighlighting", TRUE);
+					new_val = !_r_config_getboolean (L"IsEnableHighlighting", TRUE, NULL);
 
 					_r_menu_checkitem (GetMenu (hwnd), ctrl_id, 0, MF_BYCOMMAND, new_val);
-					_r_config_setboolean (L"IsEnableHighlighting", new_val);
+					_r_config_setboolean (L"IsEnableHighlighting", new_val, NULL);
 
 					_r_listview_redraw (hwnd, IDC_LISTVIEW);
 
@@ -1411,9 +1411,9 @@ INT_PTR CALLBACK DlgProc (
 				case IDM_EXPLORE:
 				{
 					PITEM_DATA ptr_item;
-					INT item_id = -1;
+					INT item_id = INT_ERROR;
 
-					while ((item_id = _r_listview_getnextselected (hwnd, IDC_LISTVIEW, item_id)) != -1)
+					while ((item_id = _r_listview_getnextselected (hwnd, IDC_LISTVIEW, item_id)) != INT_ERROR)
 					{
 						ptr_item = (PITEM_DATA)_r_listview_getitemlparam (hwnd, IDC_LISTVIEW, item_id);
 
@@ -1434,11 +1434,11 @@ INT_PTR CALLBACK DlgProc (
 					PR_STRING string;
 					ULONG_PTR hash_code;
 					ULONG_PTR enum_key = 0;
-					INT item_id = -1;
+					INT item_id = INT_ERROR;
 
 					_r_obj_initializestringbuilder (&sb, 256);
 
-					string = _r_config_getstring (L"Exclude", NULL);
+					string = _r_config_getstring (L"Exclude", NULL, NULL);
 
 					if (string)
 					{
@@ -1450,7 +1450,7 @@ INT_PTR CALLBACK DlgProc (
 						_r_obj_dereference (string);
 					}
 
-					while ((item_id = _r_listview_getnextselected (hwnd, IDC_LISTVIEW, item_id)) != -1)
+					while ((item_id = _r_listview_getnextselected (hwnd, IDC_LISTVIEW, item_id)) != INT_ERROR)
 					{
 						ptr_item = (PITEM_DATA)_r_listview_getitemlparam (hwnd, IDC_LISTVIEW, item_id);
 
@@ -1472,7 +1472,7 @@ INT_PTR CALLBACK DlgProc (
 
 					string = _r_obj_finalstringbuilder (&sb);
 
-					_r_config_setstring (L"Exclude", _r_obj_getstring (string));
+					_r_config_setstring (L"Exclude", _r_obj_getstring (string), NULL);
 
 					_r_obj_deletestringbuilder (&sb);
 
@@ -1486,13 +1486,13 @@ INT_PTR CALLBACK DlgProc (
 					R_STRINGBUILDER sb;
 					PR_STRING string;
 					INT column_count;
-					INT item_id = -1;
+					INT item_id = INT_ERROR;
 
 					_r_obj_initializestringbuilder (&sb, 256);
 
 					column_count = _r_listview_getcolumncount (hwnd, IDC_LISTVIEW);
 
-					while ((item_id = _r_listview_getnextselected (hwnd, IDC_LISTVIEW, item_id)) != -1)
+					while ((item_id = _r_listview_getnextselected (hwnd, IDC_LISTVIEW, item_id)) != INT_ERROR)
 					{
 						for (INT i = 0; i < column_count; i++)
 						{
@@ -1528,13 +1528,13 @@ INT_PTR CALLBACK DlgProc (
 					R_STRINGBUILDER sb;
 					PR_STRING string;
 					INT column_id;
-					INT item_id = -1;
+					INT item_id = INT_ERROR;
 
 					column_id = (INT)lparam;
 
 					_r_obj_initializestringbuilder (&sb, 256);
 
-					while ((item_id = _r_listview_getnextselected (hwnd, IDC_LISTVIEW, item_id)) != -1)
+					while ((item_id = _r_listview_getnextselected (hwnd, IDC_LISTVIEW, item_id)) != INT_ERROR)
 					{
 						string = _r_listview_getitemtext (hwnd, IDC_LISTVIEW, item_id, column_id);
 
@@ -1564,7 +1564,7 @@ INT_PTR CALLBACK DlgProc (
 					if (GetFocus () != GetDlgItem (hwnd, IDC_LISTVIEW))
 						break;
 
-					_r_listview_setitemstate (hwnd, IDC_LISTVIEW, -1, LVIS_SELECTED, LVIS_SELECTED);
+					_r_listview_setitemstate (hwnd, IDC_LISTVIEW, INT_ERROR, LVIS_SELECTED, LVIS_SELECTED);
 
 					break;
 				}

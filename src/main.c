@@ -160,7 +160,7 @@ NTSTATUS NTAPI _app_readerthread (
 	PR_STRING path;
 	R_BYTEREF byte;
 	HWND hwnd;
-	ULONG_PTR hash_code;
+	ULONG hash_code;
 	NTSTATUS status;
 
 	hwnd = arglist;
@@ -198,7 +198,7 @@ NTSTATUS NTAPI _app_readerthread (
 			if (!path)
 				continue;
 
-			hash_code = _r_str_gethash (_r_path_getbasename (&path->sr), TRUE);
+			hash_code = _r_str_gethash2 (_r_path_getbasename (&path->sr), TRUE);
 
 			if (_r_obj_findhashtable (exclude_table, hash_code))
 			{
@@ -506,7 +506,7 @@ INT_PTR CALLBACK SettingsProc (
 						while (remaining_part.length != 0)
 						{
 							if (_r_str_splitatchar (&remaining_part, L';', &value_part, &remaining_part))
-								_r_obj_addhashtableitem (exclude_table, _r_str_gethash2 (&value_part, TRUE), NULL);
+								_r_obj_addhashtableitem (exclude_table, _r_str_gethash (&value_part, TRUE), NULL);
 						}
 					}
 
@@ -681,7 +681,7 @@ NTSTATUS _app_createevents (
 	{
 		_r_show_errormessage (hwnd, NULL, status, _r_locale_getstring (IDS_ERROR_DUPLICATE), ET_NONE);
 
-		RtlExitUserProcess (status);
+		_r_sys_terminateprocess (NtCurrentProcess (), status);
 
 		return status;
 	}
@@ -764,7 +764,7 @@ VOID _app_initialize (
 	{
 		_r_show_errormessage (hwnd, NULL, NtLastError (), L"ConvertStringSecurityDescriptorToSecurityDescriptorW", ET_WINDOWS);
 
-		RtlExitUserProcess (STATUS_SUCCESS);
+		_r_sys_terminateprocess (NtCurrentProcess (), STATUS_SUCCESS);
 
 		return;
 	}
@@ -871,7 +871,7 @@ INT_PTR CALLBACK DlgProc (
 				while (remaining_part.length != 0)
 				{
 					if (_r_str_splitatchar (&remaining_part, L';', &value_part, &remaining_part))
-						_r_obj_addhashtableitem (exclude_table, _r_str_gethash2 (&value_part, TRUE), NULL);
+						_r_obj_addhashtableitem (exclude_table, _r_str_gethash (&value_part, TRUE), NULL);
 				}
 
 				_r_obj_dereference (string);
@@ -1432,8 +1432,8 @@ INT_PTR CALLBACK DlgProc (
 					PITEM_DATA ptr_item;
 					R_STRINGBUILDER sb;
 					PR_STRING string;
-					ULONG_PTR hash_code;
 					ULONG_PTR enum_key = 0;
+					ULONG hash_code;
 					INT item_id = INT_ERROR;
 
 					_r_obj_initializestringbuilder (&sb, 256);
@@ -1459,7 +1459,7 @@ INT_PTR CALLBACK DlgProc (
 							_r_obj_appendstringbuilder (&sb, _r_path_getbasename (&ptr_item->path->sr));
 							_r_obj_appendstringbuilder (&sb, L";");
 
-							hash_code = _r_str_gethash (_r_path_getbasename (&ptr_item->path->sr), TRUE);
+							hash_code = _r_str_gethash2 (_r_path_getbasename (&ptr_item->path->sr), TRUE);
 
 							_r_obj_addhashtableitem (exclude_table, hash_code, NULL);
 						}

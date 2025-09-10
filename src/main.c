@@ -131,7 +131,7 @@ VOID _app_additem (
 	ptr_item->index = count + 1;
 	ptr_item->pid = pid;
 
-	_r_path_geticon (path, &ptr_item->icon_id, NULL);
+	_r_path_geticon (path, NULL, &ptr_item->icon_id);
 
 	_r_listview_additem (hwnd, IDC_LISTVIEW, count, LPSTR_TEXTCALLBACK, I_IMAGECALLBACK, I_DEFAULT, (LPARAM)ptr_item);
 

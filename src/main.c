@@ -192,7 +192,7 @@ NTSTATUS NTAPI _app_readerthread (
 			}
 			else
 			{
-				_r_sys_getprocessimagepathbyid (ULongToHandle (debugger->ProcessId), TRUE, &path);
+				_r_sys_getprocessimagepathbyid (debugger->ProcessId, TRUE, &path);
 			}
 
 			if (!path)
@@ -681,7 +681,7 @@ NTSTATUS _app_createevents (
 	{
 		_r_show_errormessage (hwnd, NULL, status, _r_locale_getstring (IDS_ERROR_DUPLICATE), ET_NONE);
 
-		_r_sys_terminateprocess (NtCurrentProcess (), status);
+		NtTerminateProcess (NtCurrentProcess (), status);
 
 		return status;
 	}
@@ -764,7 +764,7 @@ VOID _app_initialize (
 	{
 		_r_show_errormessage (hwnd, NULL, NtLastError (), L"ConvertStringSecurityDescriptorToSecurityDescriptorW", ET_WINDOWS);
 
-		_r_sys_terminateprocess (NtCurrentProcess (), STATUS_SUCCESS);
+		NtTerminateProcess (NtCurrentProcess (), STATUS_SUCCESS);
 
 		return;
 	}

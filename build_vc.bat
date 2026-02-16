@@ -32,9 +32,6 @@ goto end
 
 :start
 
-msbuild dbgvision.sln -property:Configuration=Release -property:Platform=x86 -verbosity:normal
-if %ERRORLEVEL% neq 0 goto end
-
 msbuild dbgvision.sln -property:Configuration=Release -property:Platform=x64 -verbosity:normal
 if %ERRORLEVEL% neq 0 goto end
 

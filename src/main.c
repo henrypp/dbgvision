@@ -186,13 +186,13 @@ NTSTATUS NTAPI _app_readerthread (
 		{
 			debugger = config.base_address;
 
-			if (!debugger->ProcessId)
+			if (debugger->ProcessId == 0)
 			{
 				path = _r_sys_getkernelfilename (TRUE);
 			}
 			else
 			{
-				_r_sys_getprocessimagepathbyid (debugger->ProcessId, TRUE, &path);
+				_r_sys_getprocessimagepathbyid (&path, debugger->ProcessId, TRUE);
 			}
 
 			if (!path)
@@ -209,7 +209,7 @@ NTSTATUS NTAPI _app_readerthread (
 
 			_r_obj_initializebyteref (&byte, debugger->Buffer);
 
-			status = _r_str_multibyte2unicode (&byte, &message);
+			status = _r_str_multibyte2unicode (&message, &byte);
 
 			if (NT_SUCCESS (status))
 			{

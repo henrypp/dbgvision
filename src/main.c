@@ -110,7 +110,7 @@ VOID _app_additem (
 	_In_ ULONG pid,
 	_In_ PR_STRINGREF path,
 	_In_ PR_STRINGREF message,
-	_In_ ULONG_PTR hash_code
+	_In_ ULONG hash_code
 )
 {
 	PITEM_DATA ptr_item;

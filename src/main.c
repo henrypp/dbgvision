@@ -209,7 +209,7 @@ NTSTATUS NTAPI _app_readerthread (
 
 			_r_obj_initializebyteref (&byte, debugger->Buffer);
 
-			status = _r_str_multibyte2unicode (&message, &byte);
+			status = _r_str_multibyte2unicode (&byte, &message);
 
 			if (NT_SUCCESS (status))
 			{
@@ -758,7 +758,7 @@ VOID _app_initialize (
 	ULONG_PTR base_size = sizeof (DEBUG_BUFFER);
 	NTSTATUS status;
 
-	_r_sys_setprocessprivilege (NtCurrentProcess (), privileges, RTL_NUMBER_OF (privileges), TRUE);
+	_r_sys_setprocessprivilege (hwnd, NtCurrentProcess (), privileges, RTL_NUMBER_OF (privileges), TRUE);
 
 	if (!ConvertStringSecurityDescriptorToSecurityDescriptorW (SECURITY_DESCRIPTOR, SDDL_REVISION, &config.sd, NULL))
 	{

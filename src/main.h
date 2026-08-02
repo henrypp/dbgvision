@@ -1,5 +1,5 @@
 // DbgVision
-// Copyright (c) 2024-2025 Henry++
+// Copyright (c) 2024-2026 Henry++
 
 #pragma once
 
@@ -39,7 +39,7 @@ typedef struct _PITEM_DATA
 	PR_STRING timestamp;
 	PR_STRING message;
 	PR_STRING path;
-	ULONG_PTR hash_code;
+	ULONG hash_code;
 	COLORREF clr;
 	ULONG index;
 	ULONG pid;

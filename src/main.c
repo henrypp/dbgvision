@@ -1,5 +1,5 @@
 // DbgVision
-// Copyright (c) 2024-2025 Henry++
+// Copyright (c) 2024-2026 Henry++
 
 #include "routine.h"
 
@@ -123,7 +123,7 @@ VOID _app_additem (
 	ptr_item->timestamp = _r_format_unixtime (_r_unixtime_now (), FDTF_SHORTDATE | FDTF_LONGTIME);
 
 	ptr_item->hash_code = hash_code;
-	ptr_item->clr = (COLORREF)hash_code;
+	ptr_item->clr = hash_code;
 
 	ptr_item->path = _r_obj_createstring2 (path);
 	ptr_item->message = _r_obj_createstring2 (message);
@@ -203,7 +203,6 @@ NTSTATUS NTAPI _app_readerthread (
 			if (_r_obj_findhashtable (exclude_table, hash_code))
 			{
 				_r_obj_dereference (path);
-
 				continue;
 			}
 
@@ -478,7 +477,7 @@ INT_PTR CALLBACK SettingsProc (
 
 					item_count = _r_listview_getitemcount (hwnd, IDC_EXCLUDE);
 
-					_r_obj_initializestringbuilder (&sb, 256);
+					_r_obj_initializestringbuilder (&sb, 0);
 
 					for (INT i = 0; i < item_count; i++)
 					{
@@ -550,7 +549,7 @@ INT_PTR CALLBACK SettingsProc (
 				if (!_r_listview_getselectedcount (hwnd, IDC_EXCLUDE))
 					_r_menu_enableitem (hsubmenu, IDM_DELETE, MF_BYCOMMAND, FALSE);
 
-				_r_menu_popup (hsubmenu, hwnd, NULL, TRUE);
+				_r_menu_popup (hsubmenu, hwnd, NULL, 0);
 			}
 
 			DestroyMenu (hmenu);
@@ -810,7 +809,7 @@ VOID _app_initialize (
 
 VOID _app_findanddeleteitem (
 	_In_ HWND hwnd,
-	_In_ ULONG_PTR hash_code
+	_In_ ULONG hash_code
 )
 {
 	PITEM_DATA ptr_item;
@@ -1017,7 +1016,6 @@ INT_PTR CALLBACK DlgProc (
 					LPNMITEMACTIVATE lpnmlv;
 					HMENU hmenu;
 					HMENU hsubmenu;
-					INT command_id;
 
 					lpnmlv = (LPNMITEMACTIVATE)lparam;
 
@@ -1040,10 +1038,7 @@ INT_PTR CALLBACK DlgProc (
 						_r_menu_setitemtextformat (hsubmenu, IDM_COPY, FALSE, L"%s\tCtrl+C", _r_locale_getstring (IDS_COPY));
 						_r_menu_setitemtext (hsubmenu, IDM_COPY_VALUE, FALSE, _r_locale_getstring (IDS_COPY_VALUE));
 
-						command_id = _r_menu_popup (hsubmenu, hwnd, NULL, FALSE);
-
-						if (command_id)
-							_r_wnd_sendmessage (hwnd, 0, WM_COMMAND, MAKEWPARAM (command_id, 0), (LPARAM)lpnmlv->iSubItem);
+						_r_menu_popup (hsubmenu, hwnd, NULL, (LPARAM)lpnmlv->iSubItem);
 					}
 
 					DestroyMenu (hmenu);
@@ -1242,7 +1237,7 @@ INT_PTR CALLBACK DlgProc (
 					_r_menu_setitemtext (hsubmenu, IDM_TRAY_ABOUT, FALSE, _r_locale_getstring (IDS_ABOUT));
 					_r_menu_setitemtext (hsubmenu, IDM_TRAY_EXIT, FALSE, _r_locale_getstring (IDS_EXIT));
 
-					_r_menu_popup (hsubmenu, hwnd, NULL, TRUE);
+					_r_menu_popup (hsubmenu, hwnd, NULL, 0);
 
 					DestroyMenu (hmenu);
 
@@ -1436,7 +1431,7 @@ INT_PTR CALLBACK DlgProc (
 					ULONG hash_code;
 					INT item_id = INT_ERROR;
 
-					_r_obj_initializestringbuilder (&sb, 256);
+					_r_obj_initializestringbuilder (&sb, 0);
 
 					string = _r_config_getstring (L"Exclude", NULL, NULL);
 
@@ -1488,7 +1483,7 @@ INT_PTR CALLBACK DlgProc (
 					INT column_count;
 					INT item_id = INT_ERROR;
 
-					_r_obj_initializestringbuilder (&sb, 256);
+					_r_obj_initializestringbuilder (&sb, 0);
 
 					column_count = _r_listview_getcolumncount (hwnd, IDC_LISTVIEW);
 
@@ -1532,7 +1527,7 @@ INT_PTR CALLBACK DlgProc (
 
 					column_id = (INT)lparam;
 
-					_r_obj_initializestringbuilder (&sb, 256);
+					_r_obj_initializestringbuilder (&sb, 0);
 
 					while ((item_id = _r_listview_getnextselected (hwnd, IDC_LISTVIEW, item_id)) != INT_ERROR)
 					{
